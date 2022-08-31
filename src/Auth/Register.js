@@ -1,7 +1,8 @@
 import React from 'react'
-import { Form,Button,Container,Alert } from 'react-bootstrap';
-import { auth, createUserWithEmailAndPassword,updateProfile,getDatabase, ref, set  } from "../firebaseConfig";
+import { Form,Button,Container,Alert,Spinner } from 'react-bootstrap';
+import { getAuth, createUserWithEmailAndPassword,updateProfile,getDatabase, ref, set  } from "../firebaseConfig";
 import { ToastContainer, toast } from 'react-toastify';
+import { Link } from "react-router-dom";
 
 class Register extends React.Component{
     state={
@@ -14,7 +15,7 @@ class Register extends React.Component{
         loader: false
     }
 
-    onChange = e => {
+    handleChange = e => {
         this.setState({
             [e.target.name]: e.target.value
         })
@@ -36,9 +37,9 @@ class Register extends React.Component{
         e.preventDefault()
         if(this.isFormEmpty(this.state)){
             this.setState({loader: true})
-            createUserWithEmailAndPassword(auth, this.state.email, this.state.password)
+            createUserWithEmailAndPassword(getAuth(), this.state.email, this.state.password)
             .then((user) => {
-                updateProfile(auth.currentUser, {
+                updateProfile(getAuth().currentUser, {
                     displayName: this.state.username,
                 })
                 .then(() => {
@@ -73,7 +74,20 @@ class Register extends React.Component{
 
     render(){
         return (
+            <>
+            
+           
             <Container className='w-25 border p-5 mt-5 shadow'>
+                {this.state.errorMessage &&
+                    <Alert variant="danger mt-4 text-center">
+                        <h4>{this.state.errorMessage}</h4>
+                    </Alert>
+                }
+                {this.state.successMessage &&
+                    <Alert variant="success mt-4 text-center">
+                        <h4>{this.state.successMessage}</h4>
+                    </Alert>
+                }
                 <Alert className='text-center'>
                     <h1>Registration</h1>
                 </Alert>
@@ -84,7 +98,7 @@ class Register extends React.Component{
                             name="username"
                             type="text" 
                             placeholder="First Name" 
-                            onChange={this.onChange}
+                            onChange={this.handleChange}
                             value={this.state.username}
                         />
                     </Form.Group>
@@ -95,7 +109,7 @@ class Register extends React.Component{
                             name="email"
                             type="email" 
                             placeholder="Enter email" 
-                            onChange={this.onChange}
+                            onChange={this.handleChange}
                             value={this.state.email}
                         />
                     </Form.Group>
@@ -106,37 +120,38 @@ class Register extends React.Component{
                             name="password" 
                             type="password" 
                             placeholder="Password" 
-                            onChange={this.onChange}
+                            onChange={this.handleChange}
                             value={this.state.password}
                         />
                     </Form.Group>
-        
+
                     <Form.Group className="mb-3" controlId="formBasicPassword">
                         <Form.Label>Confirm Password</Form.Label>
                         <Form.Control 
                             name="Cpassword"
                             type="password" 
                             placeholder="Password"
-                            onChange={this.onChange}
+                            onChange={this.handleChange}
                             value={this.state.Cpassword} 
                         />
                     </Form.Group>
+      
+                    {this.state.loader 
+                    ?
+                        <Spinner animation="border" variant="info" />
+                    :
+                        <Button variant="primary" type="submit">
+                            Submit
+                        </Button>
+                    }
                     
-                    <Button variant="primary" type="submit">
-                        Submit
-                    </Button>
-                    {this.state.errorMessage &&
-                        <Alert variant="danger mt-4 text-center">
-                            <h4>{this.state.errorMessage}</h4>
-                        </Alert>
-                    }
-                    {this.state.successMessage &&
-                        <Alert variant="success mt-4 text-center">
-                            <h4>{this.state.successMessage}</h4>
-                        </Alert>
-                    }
+                   <Link className="ms-3 link" to="/login">
+                        Log in
+                    </Link>
                 </Form>
             </Container>
+            </>
+           
         )
     }
 }
