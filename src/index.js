@@ -27,7 +27,7 @@ class Routing extends React.Component {
     const auth = getAuth();
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log(user);
+        // console.log(user);
         this.setState({tracker: true})
       } else {
         this.setState({tracker: false})
