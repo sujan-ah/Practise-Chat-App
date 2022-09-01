@@ -8,3 +8,10 @@ export function setuser(user){
         } 
     } 
 }
+
+export function clearuser(user){ 
+    return { 
+        type: actiontype.CLEAR_USER, 
+         
+    } 
+}

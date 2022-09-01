@@ -9,12 +9,16 @@ const initialState = {
 
 function user_reducer(state = initialState, action) {
     switch (action.type) {
-      case actiontype.SET_USER:
-        return {
-            type: action.payload.currentUser,
-            isLoading: false,
-        }
-      default:
+            case actiontype.SET_USER:
+            return {
+                type: action.payload.currentUser,
+                isLoading: false,
+            }
+            case actiontype.CLEAR_USER:
+            return {
+                ...initialState
+            }
+        default:
         return state
     }
 }
