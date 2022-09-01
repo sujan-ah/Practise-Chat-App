@@ -1,9 +1,23 @@
 import React, { Component } from 'react'
-import {Dropdown} from 'react-bootstrap'
+import { Dropdown,Modal,Button,ProgressBar } from 'react-bootstrap'
 import { getAuth, signOut } from "firebase/auth";
+import { storage } from "../../firebaseConfig"
+import {
+    ref,
+    uploadBytesResumable,
+    getDownloadURL 
+} from "firebase/storage";
+
 
 export default class UserPanel extends Component {
+    state={
+        modal: false,
+        imageAsFile: '',
+        imageAsUrl: '',
 
+        file: "",
+        percent: 0,
+    }
 
     handleLogOut = (e) =>{
         e.preventDefault()
@@ -14,26 +28,105 @@ export default class UserPanel extends Component {
           console.log(error);
         })
     }
+
+    handleChange = (e) => {
+        this.setState({file: e.target.files[0]})
+    }
+    
+    handleUpload = () => {
+        if (!this.state.file) {
+            alert("Please upload an image first!");
+        }
+    
+        const storageRef = ref(storage, `/files/${this.state.file.name}`);
+    
+        const uploadTask = uploadBytesResumable(storageRef, this.state.file);
+    
+        uploadTask.on(
+            "state_changed",
+            (snapshot) => {
+                const percent = Math.round(
+                    (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+                );
+               
+                // update progress
+                this.setState({percent: percent})
+            },
+            (err) => console.log(err),
+            () => {
+                // download url
+                getDownloadURL(uploadTask.snapshot.ref).then((url) => {
+                    console.log(url);
+                });
+            }
+            
+        );
+    };
     
 
 
     render() {
         return (
-            <Dropdown>
-            <Dropdown.Toggle variant="success" id="dropdown-basic">
-            Profile
-            </Dropdown.Toggle>
-    
-            <Dropdown.Menu>
-            <Dropdown.Item href="#/action-1">Logged As Sujan</Dropdown.Item>
-            <Dropdown.Item href="#/action-2">Change Profile Pic</Dropdown.Item>
-            <Dropdown.Item 
-                onClick={this.handleLogOut}
-            >
-                Log Out
-            </Dropdown.Item>
-            </Dropdown.Menu>
-        </Dropdown>
+            <>
+                <Dropdown>
+                    <Dropdown.Toggle variant="success" id="dropdown-basic">
+                        Profile
+                    </Dropdown.Toggle>
+            
+                    <Dropdown.Menu>
+                        <Dropdown.Item>Logged As Sujan</Dropdown.Item>
+
+                        <Dropdown.Item
+                            onClick={()=> this.setState({modal: true})}
+                        >
+                            Change Profile Pic
+                        </Dropdown.Item>
+
+                        <Dropdown.Item 
+                            onClick={this.handleLogOut}
+                        >
+                            Log Out
+                        </Dropdown.Item>
+                    </Dropdown.Menu>
+                </Dropdown>
+
+                <Modal
+                    show={this.state.modal}
+                    size="lg"
+                    aria-labelledby="contained-modal-title-vcenter"
+                    centered
+                    >
+                    <Modal.Header closeButton>
+                    <Modal.Title id="contained-modal-title-vcenter">
+                        Upload Profile Picture
+                    </Modal.Title>
+                    </Modal.Header>
+
+                    <Modal.Body>
+                        {this.state.percent > 0 &&
+                            <ProgressBar className='mb-2' variant="success" now={this.state.percent} label={`${this.state.percent}%`} />
+                        }
+                        <input 
+                            type="file" 
+                            onChange={this.handleChange} 
+                            accept="/image/*" 
+                        />
+                    </Modal.Body>
+
+                    <Modal.Footer>
+                        <Button 
+                            onClick={this.handleUpload}
+                        >
+                            Upload
+                        </Button>
+                        <Button 
+                            onClick={() => this.setState({modal: false})}
+                        >
+                            Close
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+            </>
         )
     }
 }

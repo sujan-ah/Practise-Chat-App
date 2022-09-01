@@ -13,7 +13,7 @@ import MessagePanel from "./components/MessagePanel/MessagePanel";
 class App extends React.Component {
 
   componentDidMount() {
-    console.log(this.props);
+    // console.log(this.props);
     const auth = getAuth();
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -76,7 +76,7 @@ class App extends React.Component {
 }
 
 function mapStateToProps(state) {
-  console.log(state);
+  // console.log(state);
   return { 
     isLoading: state.user.isLoading 
   };
