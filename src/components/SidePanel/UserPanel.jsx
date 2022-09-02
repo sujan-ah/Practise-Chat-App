@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { Dropdown,Modal,Button,ProgressBar } from 'react-bootstrap'
 import { getAuth, signOut } from "firebase/auth";
 import { storage } from "../../firebaseConfig"
+import { getDatabase, ref as refer, push, set } from "firebase/database";
 import {
     ref,
     uploadBytesResumable,
@@ -60,7 +61,23 @@ export default class UserPanel extends Component {
                 getDownloadURL(uploadTask.snapshot.ref).then((url) => {
                     console.log(url);
 
-                    
+                    const db = getDatabase();
+                    const profileListRef = refer(db, 'files');
+                    const newProfileRef = push(profileListRef);
+                    set(newProfileRef, {
+                        fileUrl: url,
+                        createdby: this.props.userName,
+                        date: Date(),
+                        sender: this.props.user.uid,
+                    })
+                    .then(() => {
+                        console.log("Data saved successfully");
+                        this.setState({percent: ''})
+                        this.setState({modal: false})
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                    });
                 });
             }
         );
