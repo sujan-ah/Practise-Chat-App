@@ -26,6 +26,7 @@ class App extends React.Component {
 
   
   render() {
+    // console.log(this.props.userName.uid);
     return(
       this.props.isLoading 
       ?
@@ -59,7 +60,10 @@ class App extends React.Component {
             </Col>
 
             <Col lg={2} style={{background: "#473FE1", height: "100vh"}}>
-              <SidePanel/>
+              <SidePanel
+                userName={this.props.userName.displayName}
+                user={this.props.userName}
+              />
             </Col>
 
             <Col lg={7}>
@@ -76,9 +80,10 @@ class App extends React.Component {
 }
 
 function mapStateToProps(state) {
-  // console.log(state);
+  // console.log(state.user);
   return { 
-    isLoading: state.user.isLoading 
+    isLoading: state.user.isLoading,
+    userName: state.user.currentUser,
   };
 }
 

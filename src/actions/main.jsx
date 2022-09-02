@@ -8,10 +8,17 @@ export function setuser(user){
         } 
     } 
 }
-
-export function clearuser(user){ 
+export function clearuser(){ 
     return { 
-        type: actiontype.CLEAR_USER, 
-         
+        type: actiontype.CLEAR_USER,
+    } 
+}
+
+export function setgroup(group){ 
+    return { 
+        type: actiontype.SET_CURRENT_GROUP, 
+        payload: {
+            currentGroup: group
+        } 
     } 
 }

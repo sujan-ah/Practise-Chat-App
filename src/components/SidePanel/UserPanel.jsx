@@ -17,6 +17,8 @@ export default class UserPanel extends Component {
 
         file: "",
         percent: 0,
+
+        profile: []
     }
 
     handleLogOut = (e) =>{
@@ -57,24 +59,27 @@ export default class UserPanel extends Component {
                 // download url
                 getDownloadURL(uploadTask.snapshot.ref).then((url) => {
                     console.log(url);
+
+                    
                 });
             }
-            
         );
     };
     
 
-
     render() {
+        // console.log(this.props.userName);
         return (
             <>
-                <Dropdown>
+                <Dropdown style={{marginTop: 50, marginLeft: 100}}>
                     <Dropdown.Toggle variant="success" id="dropdown-basic">
                         Profile
                     </Dropdown.Toggle>
             
                     <Dropdown.Menu>
-                        <Dropdown.Item>Logged As Sujan</Dropdown.Item>
+                        <Dropdown.Item>
+                            Logged As {this.props.userName}
+                        </Dropdown.Item>
 
                         <Dropdown.Item
                             onClick={()=> this.setState({modal: true})}
