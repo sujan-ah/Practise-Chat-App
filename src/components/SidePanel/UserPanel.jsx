@@ -47,7 +47,6 @@ export default class UserPanel extends Component {
         this.setState({file: e.target.files[0]})
     }
     
-
     handleUpload = () =>{
         if(this.state.file){
             let storageRef = ref(storage, `files1/${this.state.file.name}`)
@@ -83,9 +82,7 @@ export default class UserPanel extends Component {
             console.log("data nai")
         }
     }
-    
-    
-   
+
     componentDidUpdate(){
         let filearr = []
         const filesRef = rof(getDatabase(), 'files1/');
@@ -100,7 +97,6 @@ export default class UserPanel extends Component {
             }
         });
     }
-    
     
 
     render() {
