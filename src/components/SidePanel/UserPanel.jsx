@@ -107,7 +107,18 @@ export default class UserPanel extends Component {
         // console.log(this.props.user.uid);
         return (
             <>
-                
+                <div>
+                    {this.state.profile.map((item)=>(
+                        item.sender == this.props.user.uid
+                        ?
+                        <div>
+                        {/* <Image style={{width: 60, height: 60,borderRadius: "50%",marginLeft: 13,marginBottom: 5}}  
+                            src={item.fileurl}/>    */}
+                    </div>
+                        :
+                        ""
+                    ))}
+                </div>
 
                 <Dropdown>
                         <Dropdown.Toggle variant="success" id="dropdown-basic">
