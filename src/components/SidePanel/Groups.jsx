@@ -1,13 +1,19 @@
 import React, { Component } from 'react'
-import { Container,Row,Col,Tab,Nav,Modal,Button,Form } from 'react-bootstrap'
+import { Container,Row,Col,Tab,Nav,Modal,Button,Form,Alert,Card } from 'react-bootstrap'
 import { BiPlusMedical } from 'react-icons/bi';
 import { getDatabase, ref, push, set } from "firebase/database";
+
+import {  ref as rof, onChildAdded, onChildChanged, onChildRemoved } from "firebase/database";
+
 
 export default class Groups extends Component {
     state={
         modal: false,
         groupname: '',
         grouptagline: '',
+        error: "",
+        groupbox: [],
+        groupup: true,
     }
 
     handleModal = () =>{
@@ -16,24 +22,48 @@ export default class Groups extends Component {
     handleChange = (e) =>{
         this.setState({[e.target.name]: e.target.value});
     }
+    isFormValid = ({groupname,grouptagline}) =>{
+        if(!groupname || !grouptagline){
+            this.setState({error: "Please Fill The All Field"})
+        }else{
+            return true
+        }
+    }
 
     handleSubmit = (e) =>{
         e.preventDefault()
-        const db = getDatabase();
-        const groupListRef = ref(db, 'group');
-        const newGroupRef = push(groupListRef);
-        set(newGroupRef, {
-            createdby: this.props.userName,
-            groupname: this.state.groupname,
-            grouptagline: this.state.grouptagline,
-            date: Date(),
-            sender: this.props.user.uid,
-        });
+        if(this.isFormValid(this.state)){
+            const db = getDatabase();
+            const groupListRef = ref(db, 'group');
+            const newGroupRef = push(groupListRef);
+            set(newGroupRef, {
+                createdby: this.props.userName,
+                groupname: this.state.groupname,
+                grouptagline: this.state.grouptagline,
+                date: Date(),
+                sender: this.props.user.uid,
+            })
+            .then(() => {
+                this.setState({modal: false})
+                this.setState({groupname: ""})
+                this.setState({grouptagline: ""})
+                this.setState({error: ""})
+                
+            })
+        }
     }
 
-    
-
-
+    componentDidMount(){
+        let groupfileArr = []
+        const commentsRef = rof(getDatabase(), 'group/');
+        onChildAdded(commentsRef, (data) => {
+            groupfileArr.push(data.val())
+            if(this.state.groupup){
+                this.setState({groupbox: groupfileArr})
+                this.setState({groupup: false})
+            }
+        });
+    }
 
 
   render() {
@@ -78,7 +108,14 @@ export default class Groups extends Component {
                     placeholder="Group Tagline"
                     onChange={this.handleChange}
                 />
+                {this.state.error &&
+                    <Alert className='mt-2 text-center' variant="danger">
+                        <h5>{this.state.error}</h5>
+                    </Alert>
+                }
             </Modal.Body>
+            
+            
 
             <Modal.Footer>
                 <Button 
@@ -95,33 +132,19 @@ export default class Groups extends Component {
             </Modal.Footer>
         </Modal>
 
-        <Row>
+        <Card style={{height: 150, overflowY: "scroll"}}>
             <Tab.Container id="left-tabs-example" defaultActiveKey="first">
                 <Row>
-                    {/* <Col sm={12}> */}
                     <Nav variant="pills" className="flex-column">
-                        <Nav.Item>
-                        <Nav.Link eventKey="first">Tab 1</Nav.Link>
-                        </Nav.Item>
-                        <Nav.Item>
-                        <Nav.Link eventKey="second">Tab 2</Nav.Link>
-                        </Nav.Item>
+                        {this.state.groupbox.map((item, index)=>(
+                            <Nav.Item>
+                            <Nav.Link eventKey={index}>{item.groupname}</Nav.Link>
+                            </Nav.Item>
+                        ))}
                     </Nav>
-                    {/* </Col> */}
-                    {/* <Col sm={9}>
-                    <Tab.Content>
-                        <Tab.Pane eventKey="first">
-                            ami 
-                        <Sonnet />
-                        </Tab.Pane>
-                        <Tab.Pane eventKey="second">
-                        <Sonnet />
-                        </Tab.Pane>
-                    </Tab.Content>
-                    </Col> */}
                 </Row>
             </Tab.Container>
-        </Row>
+        </Card>
       </Container>
     )
   }

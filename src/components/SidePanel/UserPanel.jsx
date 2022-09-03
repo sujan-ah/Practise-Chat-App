@@ -1,16 +1,14 @@
 import React, { Component } from 'react'
-import { Dropdown,Modal,Button,ProgressBar,Image,FormControl,InputGroup } from 'react-bootstrap'
+import { Dropdown,Modal,Button,ProgressBar,Image } from 'react-bootstrap'
 import { getAuth, signOut } from "firebase/auth";
-// import { storage } from "../../firebaseConfig"
-// import { storage,getDatabase, ref as refer, push,child, set,onChildAdded } from "firebase/database";
-import { onChildAdded, onChildChanged,onChildRemoved,ref as rof } from "firebase/database";
-import { storage,getDatabase, push, set,child, ref as refer } from '../../firebaseConfig'
+import { storage } from "../../firebaseConfig"
+import { getDatabase, ref as refer, push, set, child } from "firebase/database";
 import {
     ref,
     uploadBytesResumable,
     getDownloadURL 
 } from "firebase/storage";
-
+import { onChildAdded, onChildChanged,onChildRemoved,ref as rof } from "firebase/database";
 
 
 export default class UserPanel extends Component {
@@ -36,66 +34,66 @@ export default class UserPanel extends Component {
         })
     }
 
-    openModal = () =>{
-        this.setState({modal: true})
-    }
-    closeModal = () =>{
-        this.setState({modal: false})
-    }
-
-    handleImage = (e) => {
+    handleChange = (e) => {
         this.setState({file: e.target.files[0]})
     }
     
-
-    handleUpload = () =>{
-        if(this.state.file){
-            let storageRef = ref(storage, `files1/${this.state.file.name}`)
-            let uploadtask = uploadBytesResumable(storageRef, this.state.file)
-            uploadtask.on("state_changed", (snapshot)=>{
-                let percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
+    handleUpload = () => {
+        if (!this.state.file) {
+            alert("Please upload an image first!");
+        }
+    
+        const storageRef = ref(storage, `/files/${this.state.file.name}`);
+    
+        const uploadTask = uploadBytesResumable(storageRef, this.state.file);
+    
+        uploadTask.on(
+            "state_changed",
+            (snapshot) => {
+                const percent = Math.round(
+                    (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+                );
+               
+                // update progress
                 this.setState({percent: percent})
-                console.log(this.state.percent)
-            },(err)=>{
-                console.log(err)
-            },()=>{
-                getDownloadURL(uploadtask.snapshot.ref).then((url)=>{
-                    console.log(url)
+            },
+            (err) => console.log(err),
+            () => {
+                // download url
+                getDownloadURL(uploadTask.snapshot.ref).then((url) => {
+                    console.log(url);
 
-                    const groupsRef = refer(getDatabase(), 'files1');
-                    const newGroup = (child(groupsRef, `${this.props.user.uid}`));
-                    set(newGroup, {
-                        fileurl: url,
+                    const db = getDatabase();
+                    const profileListRef = refer(db, 'files');
+                    const newProfileRef = (child(profileListRef, `${this.props.user.uid}`));
+                    set(newProfileRef, {
+                        fileUrl: url,
+                        createdby: this.props.userName,
                         date: Date(),
                         sender: this.props.user.uid,
-                        username: this.props.userName
-                    }).then(()=>{
-                        this.setState({profileup: true})
-                        this.setState({modal: false})
-                        this.setState({percent: ""})
-                        console.log("file geche db e")
-                    }).catch(err=>{
-                        // console.log("ami")
                     })
-                })
-            })
-        }else{
-            console.log("data nai")
-        }
-    }
+                    .then(() => {
+                        console.log("Data saved successfully");
+                        this.setState({profileup: true})
+                        this.setState({percent: ''})
+                        this.setState({modal: false})
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                    });
+                });
+            }
+        );
+    };
+
     
-    
-   
     componentDidUpdate(){
         let filearr = []
-        const filesRef = rof(getDatabase(), 'files1/');
+        const filesRef = rof(getDatabase(), 'files/');
         onChildAdded(filesRef, (data) => {
-            // console.log(data.val());
             filearr.push(data.val())
-            // console.log(filearr);
             if(this.state.profileup){
                 this.setState({profile: filearr})
-                // console.log(this.state.profiles);
                 this.setState({profileup: false})
             }
         });
@@ -111,83 +109,75 @@ export default class UserPanel extends Component {
                     {this.state.profile.map((item)=>(
                         item.sender == this.props.user.uid
                         ?
-                        <div>
-                        <Image style={{width: 60, height: 60,borderRadius: "50%",marginLeft: 13,marginBottom: 5}}  
-                            src={item.fileurl}/>   
-                    </div>
+                            <div>
+                                <Image style={{width: 60, height: 60,borderRadius: "50%",marginLeft: 13,marginBottom: 5}}  
+                                    src={item.fileUrl}/>   
+                            </div>
                         :
                         ""
+
                     ))}
                 </div>
 
-                <Dropdown>
-                        <Dropdown.Toggle variant="success" id="dropdown-basic">
-                            Profile
-                        </Dropdown.Toggle>
+                <Dropdown style={{marginTop: 50, marginLeft: 100}}>
+                    <Dropdown.Toggle variant="success" id="dropdown-basic">
+                        Profile
+                    </Dropdown.Toggle>
+            
+                    <Dropdown.Menu>
+                        <Dropdown.Item>
+                            Logged As {this.props.userName}
+                        </Dropdown.Item>
 
-                        <Dropdown.Menu>
-                            <Dropdown.Item href="#/action-1">
-                                Loged As {this.props.userName} 
-                            </Dropdown.Item>
-                            <Dropdown.Item 
-                                href="#/action-2"
-                                onClick={this.openModal}
-                            >
-                                Change Profile Pic
-                            </Dropdown.Item>
-                            <Dropdown.Item href="#/action-3" onClick={this.handleLogOut}>
-                                Log Out
-                            </Dropdown.Item>
-                        </Dropdown.Menu>
-                    </Dropdown>
+                        <Dropdown.Item
+                            onClick={()=> this.setState({modal: true})}
+                        >
+                            Change Profile Pic
+                        </Dropdown.Item>
+
+                        <Dropdown.Item 
+                            onClick={this.handleLogOut}
+                        >
+                            Log Out
+                        </Dropdown.Item>
+                    </Dropdown.Menu>
+                </Dropdown>
 
                 <Modal
-                show={this.state.modal}
-                size="lg"
-                aria-labelledby="contained-modal-title-vcenter"
-                centered
-                >
-                <Modal.Header closeButton>
+                    show={this.state.modal}
+                    size="lg"
+                    aria-labelledby="contained-modal-title-vcenter"
+                    centered
+                    >
+                    <Modal.Header closeButton>
                     <Modal.Title id="contained-modal-title-vcenter">
-                    {/* <FontAwesomeIcon style={{color: "#0B5ED7", fontSize: 70,marginLeft: 350}} icon={faUsers} /> */}
-                    <h1 style={{marginLeft: 250,fontSize: 30}}>
                         Upload Profile Picture
-                    </h1>
                     </Modal.Title>
-                </Modal.Header>
-                
-                <Modal.Body style={{marginTop: 10}}>
-                    <InputGroup style={{width: 300}}>
-                        <InputGroup.Text>
-                            {/* <FontAwesomeIcon  icon={faUpload} /> */}
-                        </InputGroup.Text>
-                        <FormControl
-                            onChange={this.handleImage} 
-                            type="file" 
-                            icon='upload' 
-                            placeholder='Search...'
-                        />
-                    </InputGroup>
-                    
-                    {this.state.percent ?
-                        <ProgressBar now={this.state.percent} label={`${this.state.percent}%`} /> : ""
-                    }
-                </Modal.Body>
+                    </Modal.Header>
 
-                <Modal.Footer>
-                    <Button 
-                        onClick={this.handleUpload}
-                        variant="primary" 
-                    >
-                        Upload
-                    </Button>
-                    <Button 
-                        variant="danger" 
-                        onClick={this.closeModal}
-                    >
-                        Cancel
-                    </Button>
-                </Modal.Footer>
+                    <Modal.Body>
+                        {this.state.percent > 0 &&
+                            <ProgressBar className='mb-2' variant="success" now={this.state.percent} label={`${this.state.percent}%`} />
+                        }
+                        <input 
+                            type="file" 
+                            onChange={this.handleChange} 
+                            accept="/image/*" 
+                        />
+                    </Modal.Body>
+
+                    <Modal.Footer>
+                        <Button 
+                            onClick={this.handleUpload}
+                        >
+                            Upload
+                        </Button>
+                        <Button 
+                            onClick={() => this.setState({modal: false})}
+                        >
+                            Close
+                        </Button>
+                    </Modal.Footer>
                 </Modal>
             </>
         )
