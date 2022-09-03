@@ -112,8 +112,8 @@ export default class UserPanel extends Component {
                         item.sender == this.props.user.uid
                         ?
                         <div>
-                        {/* <Image style={{width: 60, height: 60,borderRadius: "50%",marginLeft: 13,marginBottom: 5}}  
-                            src={item.fileurl}/>    */}
+                        <Image style={{width: 60, height: 60,borderRadius: "50%",marginLeft: 13,marginBottom: 5}}  
+                            src={item.fileurl}/>   
                     </div>
                         :
                         ""
