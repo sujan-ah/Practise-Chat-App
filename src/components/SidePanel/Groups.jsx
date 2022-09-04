@@ -14,8 +14,8 @@ class Groups extends Component {
         err: "",
 
         groups: [],
-        groupup: true,
         active: '',
+        firstload: true,
     }
 
     handleModal = () =>{
@@ -73,14 +73,25 @@ class Groups extends Component {
                 }
                 groupsafterload.push(groupdata)
             })
-            this.setState({groups: groupsafterload})
+            this.setState({groups: groupsafterload}, this.addgroupafterload)
         });
+    }
+
+    addgroupafterload = () =>{
+        let firstgroup = this.state.groups[0]
+        if(this.state.firstload && this.state.groups.length > 0){
+            this.props.setgroup(firstgroup)
+            this.setState({active: firstgroup.id})
+        }
+        this.setState({firstload: false})
     }
 
     groupchange = (group) =>{
         this.props.setgroup(group)
         this.setState({active: group.id})
     }
+
+   
     
 
   render() {
