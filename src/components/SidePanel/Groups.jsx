@@ -1,13 +1,21 @@
 import React, { Component } from 'react'
-import { Container,Row,Col,Tab,Nav,Modal,Button,Form } from 'react-bootstrap'
+import { Container,Row,Col,Tab,Nav,Modal,Button,Form,Card,Alert } from 'react-bootstrap'
 import { BiPlusMedical } from 'react-icons/bi';
-import { getDatabase, ref, push, set } from "firebase/database";
+import { getDatabase, ref, push, set,onValue } from "firebase/database";
+import { connect } from 'react-redux';
+import { setgroup } from '../../actions/main'
 
-export default class Groups extends Component {
+
+class Groups extends Component {
     state={
         modal: false,
         groupname: '',
         grouptagline: '',
+        err: "",
+
+        groups: [],
+        groupup: true,
+        active: '',
     }
 
     handleModal = () =>{
@@ -17,38 +25,78 @@ export default class Groups extends Component {
         this.setState({[e.target.name]: e.target.value});
     }
 
+    isFormValid = ({groupname,grouptagline}) =>{
+        if(groupname && grouptagline){
+            return true
+        }else{
+            return false
+        }
+    }
+
     handleSubmit = (e) =>{
         e.preventDefault()
+        if(this.isFormValid(this.state)){
+            const db = getDatabase();
+            const groupListRef = ref(db, 'group');
+            const newGroupRef = push(groupListRef);
+            set(newGroupRef, {
+                createdby: this.props.userName,
+                groupname: this.state.groupname,
+                grouptagline: this.state.grouptagline,
+                date: Date(),
+                sender: this.props.user.uid,
+            
+            }).then(()=>{
+                this.setState({modal: false})
+                this.setState({groupname: ""})
+                this.setState({grouptagline: ""})
+                this.setState({err: ""})
+            })
+        }else{
+            this.setState({err: "Please Fill The Information Box"})
+        }
+    }
+
+    componentDidMount(){
+        
         const db = getDatabase();
-        const groupListRef = ref(db, 'group');
-        const newGroupRef = push(groupListRef);
-        set(newGroupRef, {
-            createdby: this.props.userName,
-            groupname: this.state.groupname,
-            grouptagline: this.state.grouptagline,
-            date: Date(),
-            sender: this.props.user.uid,
+        const groupRef = ref(db, 'group/');
+        onValue(groupRef, (snapshot) => {
+            let groupsafterload = []
+
+            snapshot.forEach(item =>{
+                let groupdata = {
+                    id: item.key,
+                    groupname: item.val().groupname,
+                    grouptagline: item.val().grouptagline,
+                    createdby:  item.val().createdby,
+                }
+                groupsafterload.push(groupdata)
+            })
+            this.setState({groups: groupsafterload})
         });
     }
 
+    groupchange = (group) =>{
+        this.props.setgroup(group)
+        this.setState({active: group.id})
+    }
     
-
-
-
 
   render() {
     // console.log(this.props.user.uid);
     return (
       <Container>
-        <Row style={{fontSize: 20, color: "#fff", marginTop: 30}}>
-            <Col>
-                <h3>Group</h3>
-            </Col>
-            <Col style={{marginTop: 3, marginLeft: 80}}>
+        <Row style={{fontSize: 20, color: "#fff", marginTop: 30, marginLeft: 1}}>
+        
+            <h4>
+                Group ({this.state.groups.length})
+
                 <BiPlusMedical
+                    style={{marginTop: 0, marginLeft: 100}}
                     onClick={this.handleModal} 
                 />
-            </Col>
+            </h4>
         </Row>
 
         <Modal
@@ -80,6 +128,12 @@ export default class Groups extends Component {
                 />
             </Modal.Body>
 
+            {this.state.err ?
+                <Alert variant="danger">
+                    {this.state.err}
+                </Alert> : ""
+            }
+
             <Modal.Footer>
                 <Button 
                     onClick={this.handleSubmit}
@@ -95,34 +149,41 @@ export default class Groups extends Component {
             </Modal.Footer>
         </Modal>
 
-        <Row>
-            <Tab.Container id="left-tabs-example" defaultActiveKey="first">
-                <Row>
-                    {/* <Col sm={12}> */}
-                    <Nav variant="pills" className="flex-column">
-                        <Nav.Item>
-                        <Nav.Link eventKey="first">Tab 1</Nav.Link>
-                        </Nav.Item>
-                        <Nav.Item>
-                        <Nav.Link eventKey="second">Tab 2</Nav.Link>
-                        </Nav.Item>
-                    </Nav>
-                    {/* </Col> */}
-                    {/* <Col sm={9}>
-                    <Tab.Content>
-                        <Tab.Pane eventKey="first">
-                            ami 
-                        <Sonnet />
-                        </Tab.Pane>
-                        <Tab.Pane eventKey="second">
-                        <Sonnet />
-                        </Tab.Pane>
-                    </Tab.Content>
-                    </Col> */}
-                </Row>
-            </Tab.Container>
+        <Row style={{marginTop: 20}}>
+        <Card style={{height: "150px", overflowY: "scroll", width: "80%",marginLeft: 26,background: "#fff" }}>
+        
+            {this.state.groups.map((item)=>(
+        
+                <h5 
+                    style={this.state.active == item.id ? menuactive : menu}
+                    onClick={()=>this.groupchange(item)}
+                >
+                    {item.groupname}
+                </h5>
+
+            ))}
+     
+        </Card>
         </Row>
       </Container>
     )
   }
 }
+
+let menuactive ={
+    background: "green",
+    padding: 10,
+    color: "#fff",
+    fontSize: 30,
+    borderRadius: 10,
+    textAlign: "center",
+}
+let menu ={
+    background: "",
+    marginTop: 10,
+}
+
+
+
+
+export default connect(null, { setgroup })(Groups)
