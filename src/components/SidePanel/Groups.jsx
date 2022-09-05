@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Container,Row,Col,Tab,Nav,Modal,Button,Form,Card,Alert } from 'react-bootstrap'
+import { Container,Row,Col,Tab,Nav,Modal,Button,Form,FormControl,Card,Alert } from 'react-bootstrap'
 import { BiPlusMedical } from 'react-icons/bi';
 import { getDatabase, ref, push, set,onValue } from "firebase/database";
 import { connect } from 'react-redux';
@@ -16,6 +16,9 @@ class Groups extends Component {
         groups: [],
         active: '',
         firstload: true,
+
+        searchterm: "",
+        searchresult: [],
     }
 
     handleModal = () =>{
@@ -91,94 +94,129 @@ class Groups extends Component {
         this.setState({active: group.id})
     }
 
-   
-    
+    handleSearchChange = (e) =>{
+        this.setState({searchterm: e.target.value},()=> this.handleSearchMessage())
+    }
 
-  render() {
-    // console.log(this.props.user.uid);
-    return (
-      <Container>
-        <Row style={{fontSize: 20, color: "#fff", marginTop: 30, marginLeft: 1}}>
-        
-            <h4>
-                Group ({this.state.groups.length})
-
-                <BiPlusMedical
-                    style={{marginTop: 0, marginLeft: 100}}
-                    onClick={this.handleModal} 
-                />
-            </h4>
-        </Row>
-
-        <Modal
-            show={this.state.modal}
-            size="lg"
-            aria-labelledby="contained-modal-title-vcenter"
-            centered
-            >
-            <Modal.Header closeButton>
-                <Modal.Title id="contained-modal-title-vcenter">
-                Modal heading
-                </Modal.Title>
-            </Modal.Header>
-
-            <Modal.Body>
-                <Form.Label htmlFor="inputPassword5">Group Name</Form.Label>
-                <Form.Control
-                    name="groupname"
-                    type="text"
-                    placeholder="Group Name"
-                    onChange={this.handleChange}
-                />
-                <Form.Label htmlFor="inputPassword5">Group Tagline</Form.Label>
-                <Form.Control
-                    name="grouptagline"
-                    type="text"
-                    placeholder="Group Tagline"
-                    onChange={this.handleChange}
-                />
-            </Modal.Body>
-
-            {this.state.err ?
-                <Alert variant="danger">
-                    {this.state.err}
-                </Alert> : ""
+    handleSearchMessage = () =>{
+        let groups = [...this.state.groups]
+        let regex = new RegExp (this.state.searchterm,'gi')
+        let searchresult = groups.reduce((initvalue,message)=>{
+            if(message.groupname && message.groupname.match(regex)){
+                initvalue.push(message)
             }
+            console.log(initvalue);
+            return initvalue
+            
+        },[])
+        this.setState({searchresult: searchresult})
+    }
 
-            <Modal.Footer>
-                <Button 
-                    onClick={this.handleSubmit}
-                >
-                    Add Group
-                </Button>
 
-                <Button 
-                    onClick={()=> this.setState({modal: false})}
-                >
-                    Close
-                </Button>
-            </Modal.Footer>
-        </Modal>
 
-        <Row style={{marginTop: 20}}>
-        <Card style={{height: "150px", overflowY: "scroll", width: "80%",marginLeft: 26,background: "#fff" }}>
-        
-            {this.state.groups.map((item)=>(
-        
-                <h5 
-                    style={this.state.active == item.id ? menuactive : menu}
-                    onClick={()=>this.groupchange(item)}
-                >
-                    {item.groupname}
-                </h5>
 
-            ))}
-     
-        </Card>
-        </Row>
-      </Container>
-    )
-  }
+    render() {
+        // console.log(this.props.user.uid);
+        return (
+            <Container>
+                <Row style={{fontSize: 20, color: "#fff", marginTop: 30, marginLeft: 1}}>
+                
+                    <h4>
+                        Group ({this.state.groups.length})
+
+                        <BiPlusMedical
+                            style={{marginTop: 0, marginLeft: 100}}
+                            onClick={this.handleModal} 
+                        />
+                    </h4>
+                </Row>
+
+                <Row>
+                <FormControl
+                        onChange={this.handleSearchChange}
+                        type="search" 
+                        placeholder="search message"
+                    />
+                </Row>
+
+                <Modal
+                    show={this.state.modal}
+                    size="lg"
+                    aria-labelledby="contained-modal-title-vcenter"
+                    centered
+                    >
+                    <Modal.Header closeButton>
+                        <Modal.Title id="contained-modal-title-vcenter">
+                        Modal heading
+                        </Modal.Title>
+                    </Modal.Header>
+
+                    <Modal.Body>
+                        <Form.Label htmlFor="inputPassword5">Group Name</Form.Label>
+                        <Form.Control
+                            name="groupname"
+                            type="text"
+                            placeholder="Group Name"
+                            onChange={this.handleChange}
+                        />
+                        <Form.Label htmlFor="inputPassword5">Group Tagline</Form.Label>
+                        <Form.Control
+                            name="grouptagline"
+                            type="text"
+                            placeholder="Group Tagline"
+                            onChange={this.handleChange}
+                        />
+                    </Modal.Body>
+
+                    {this.state.err ?
+                        <Alert variant="danger">
+                            {this.state.err}
+                        </Alert> : ""
+                    }
+
+                    <Modal.Footer>
+                        <Button 
+                            onClick={this.handleSubmit}
+                        >
+                            Add Group
+                        </Button>
+
+                        <Button 
+                            onClick={()=> this.setState({modal: false})}
+                        >
+                            Close
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+
+                <Row style={{marginTop: 20}}>
+                <Card style={{height: "150px", overflowY: "scroll", width: "80%",marginLeft: 26,background: "#fff" }}>
+
+                    {this.state.searchterm
+                    ?
+                        this.state.searchresult.map((item)=>(
+                            <h5 
+                                style={this.state.active == item.id ? menuactive : menu}
+                                onClick={()=>this.groupchange(item)}
+                            >
+                                {item.groupname}
+                            </h5>
+                        ))
+                    :
+                        this.state.groups.map((item)=>(
+                            <h5 
+                                style={this.state.active == item.id ? menuactive : menu}
+                                onClick={()=>this.groupchange(item)}
+                            >
+                                {item.groupname}
+                            </h5>
+                        ))
+                    }
+                </Card>
+                </Row>
+            </Container>
+        )
+    }
 }
 
 let menuactive ={
