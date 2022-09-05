@@ -17,8 +17,8 @@ class Groups extends Component {
         active: '',
         firstload: true,
 
-        searchterm: "",
-        searchresult: [],
+        searchterm: '',
+
     }
 
     handleModal = () =>{
@@ -94,23 +94,8 @@ class Groups extends Component {
         this.setState({active: group.id})
     }
 
-    handleSearchChange = (e) =>{
-        this.setState({searchterm: e.target.value},()=> this.handleSearchMessage())
-    }
-
-    handleSearchMessage = () =>{
-        let groups = [...this.state.groups]
-        let regex = new RegExp (this.state.searchterm,'gi')
-        let searchresult = groups.reduce((initvalue,message)=>{
-            if(message.groupname && message.groupname.match(regex)){
-                initvalue.push(message)
-            }
-            console.log(initvalue);
-            return initvalue
-            
-        },[])
-        this.setState({searchresult: searchresult})
-    }
+    
+    
 
 
 
@@ -131,13 +116,14 @@ class Groups extends Component {
                     </h4>
                 </Row>
 
-                <Row>
-                <FormControl
-                        onChange={this.handleSearchChange}
+                <Form>
+                    <Form.Control 
                         type="search" 
-                        placeholder="search message"
+                        placeholder="Search Message" 
+                        onChange={(e)=> this.setState({searchterm: e.target.value})}
                     />
-                </Row>
+                </Form>
+                
 
                 <Modal
                     show={this.state.modal}
@@ -192,18 +178,14 @@ class Groups extends Component {
                 <Row style={{marginTop: 20}}>
                 <Card style={{height: "150px", overflowY: "scroll", width: "80%",marginLeft: 26,background: "#fff" }}>
 
-                    {this.state.searchterm
-                    ?
-                        this.state.searchresult.map((item)=>(
-                            <h5 
-                                style={this.state.active == item.id ? menuactive : menu}
-                                onClick={()=>this.groupchange(item)}
-                            >
-                                {item.groupname}
-                            </h5>
-                        ))
-                    :
-                        this.state.groups.map((item)=>(
+                    {this.state.groups.filter((item)=>{  
+                        if(this.state.searchterm == ""){ 
+                            return item
+                        }else if(item.groupname.toLowerCase().includes(this.state.searchterm.toLocaleLowerCase())){
+                            return item
+                        }
+                    })
+                    .map((item)=>(
                             <h5 
                                 style={this.state.active == item.id ? menuactive : menu}
                                 onClick={()=>this.groupchange(item)}
